@@ -1,0 +1,59 @@
+Step 1: Paste the CI workflow code
+Click inside the large white editor where it says Enter file contents here.
+Copy and paste the following YAML code:
+
+name: Databricks Notebook CI
+
+on:
+  push:
+    branches:
+      - "feature/**"
+  pull_request:
+    branches:
+      - main
+
+permissions:
+  contents: read
+
+jobs:
+  validate-notebook:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+
+      - name: Install validation tools
+        run: pip install nbformat
+
+      - name: Validate notebook structure and syntax
+        run: |
+          python - <<'PY'
+          import ast
+          import nbformat
+          from pathlib import Path
+
+          notebooks = list(Path(".").rglob("*.ipynb"))
+          assert notebooks, "No notebooks found"
+
+          for path in notebooks:
+              nb = nbformat.read(path, as_version=4)
+              nbformat.validate(nb)
+
+              for i, cell in enumerate(nb.cells, 1):
+                  if cell.cell_type != "code":
+                      continue
+
+                  source = cell.source.strip()
+                  if not source or source.startswith(("%", "!")):
+                      continue
+
+                  ast.parse(source, filename=f"{path}:cell{i}")
+
+              print(f"PASS: {path}")
+          PY
