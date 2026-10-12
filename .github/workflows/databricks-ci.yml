@@ -1,7 +1,3 @@
-Step 1: Paste the CI workflow code
-Click inside the large white editor where it says Enter file contents here.
-Copy and paste the following YAML code:
-
 name: Databricks Notebook CI
 
 on:
