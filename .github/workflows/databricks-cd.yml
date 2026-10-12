@@ -1,0 +1,33 @@
+name: Databricks Notebook CD
+
+on:
+  push:
+    branches:
+      - main
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  deploy-notebook:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Set up Databricks CLI
+        uses: databricks/setup-cli@main
+
+      - name: Deploy notebook to Databricks
+        env:
+          DATABRICKS_HOST: ${{ secrets.DATABRICKS_HOST }}
+          DATABRICKS_TOKEN: ${{ secrets.DATABRICKS_TOKEN }}
+        run: |
+          databricks workspace import \
+            /Shared/NB_Sales_Parquet_Transformation_Elias \
+            --file NB_Sales_Parquet_Transformation_Elias.ipynb \
+            --format JUPYTER \
+            --language PYTHON \
+            --overwrite
